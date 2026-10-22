@@ -6,6 +6,7 @@
 <meta name="description" content="How OEA Tripoli works end to end: money flows, governance, all 56 services, member and permit journeys, the yearly calendar, and a report catalogue.">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>OEA Tripoli Field Guide</title>
+<script>try { var t = localStorage.getItem("oea-theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
@@ -88,6 +89,26 @@ p { margin: 0; }
 .tabbar nav { display: flex; gap: 4px; }
 .tabbar nav a { color: color-mix(in srgb, var(--inv-fg) 78%, transparent); text-decoration: none; font-size: 0.85rem; padding: 5px 10px; border-radius: 999px; white-space: nowrap; }
 .tabbar nav a:hover { background: color-mix(in srgb, var(--inv-fg) 14%, transparent); color: var(--inv-fg); }
+.tabbar .tools { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.iconbtn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border: 1px solid color-mix(in srgb, var(--inv-fg) 22%, transparent); border-radius: 999px; background: transparent; color: var(--inv-fg); cursor: pointer; flex: none; }
+.iconbtn:hover { background: color-mix(in srgb, var(--inv-fg) 14%, transparent); }
+.iconbtn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.theme-btn .moon, :root[data-theme="dark"] .theme-btn .sun { display: none; }
+:root[data-theme="dark"] .theme-btn .moon { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-btn .sun { display: none; }
+  :root:not([data-theme="light"]) .theme-btn .moon { display: block; }
+}
+.menu-btn { display: none; }
+.menu-btn .x, .menu-btn[aria-expanded="true"] .bars { display: none; }
+.menu-btn[aria-expanded="true"] .x { display: block; }
+@media (max-width: 960px) {
+  .tabbar .wrap { overflow: visible; padding-block: 8px; }
+  .menu-btn { display: inline-flex; }
+  .tabbar nav { display: none; position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; gap: 0; padding: 6px max(16px, env(safe-area-inset-left, 0px)) 14px; background: var(--inv-bg); border-top: 1px solid color-mix(in srgb, var(--inv-fg) 14%, transparent); box-shadow: 0 12px 24px rgba(0,0,0,.25); max-height: calc(100vh - 56px); overflow-y: auto; }
+  .tabbar nav.open { display: flex; }
+  .tabbar nav a { font-size: 1rem; padding: 12px 10px; border-radius: var(--radius); }
+}
 
 /* Hero */
 .hero { padding-block: 56px 40px; border-bottom: 1px solid var(--rule); }
@@ -315,7 +336,7 @@ footer p { max-width: 75ch; }
 <div class="tabbar">
   <div class="wrap">
     <span class="mark">OEA TRIPOLI</span>
-    <nav aria-label="Sections">
+    <nav aria-label="Sections" id="site-nav">
       <a href="#money">Money</a>
       <a href="#governance">Who decides</a>
       <a href="#services">56 services</a>
@@ -325,6 +346,16 @@ footer p { max-width: 75ch; }
       <a href="#catalogue">Report catalogue</a>
       <a href="#glossary">Glossary</a>
     </nav>
+    <div class="tools">
+      <button type="button" class="iconbtn theme-btn" id="theme-btn" aria-label="Switch to dark mode" title="Toggle dark mode">
+        <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button type="button" class="iconbtn menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">
+        <svg class="bars" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        <svg class="x" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -910,6 +941,44 @@ footer p { max-width: 75ch; }
     });
   });
   updateProg();
+
+  // Theme toggle
+  var root = document.documentElement;
+  var themeBtn = document.getElementById("theme-btn");
+  var darkMq = window.matchMedia("(prefers-color-scheme: dark)");
+  function isDark() {
+    var t = root.getAttribute("data-theme");
+    return t ? t === "dark" : darkMq.matches;
+  }
+  function syncThemeBtn() {
+    themeBtn.setAttribute("aria-label", isDark() ? "Switch to light mode" : "Switch to dark mode");
+  }
+  themeBtn.addEventListener("click", function () {
+    var next = isDark() ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("oea-theme", next); } catch (e) {}
+    syncThemeBtn();
+  });
+  if (darkMq.addEventListener) darkMq.addEventListener("change", syncThemeBtn);
+  syncThemeBtn();
+
+  // Mobile menu
+  var menuBtn = document.getElementById("menu-btn");
+  var nav = document.getElementById("site-nav");
+  function setMenu(open) {
+    nav.classList.toggle("open", open);
+    menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    menuBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  }
+  menuBtn.addEventListener("click", function () { setMenu(!nav.classList.contains("open")); });
+  nav.addEventListener("click", function (e) { if (e.target.closest("a")) setMenu(false); });
+  document.addEventListener("click", function (e) {
+    if (nav.classList.contains("open") && !nav.contains(e.target) && !menuBtn.contains(e.target)) setMenu(false);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && nav.classList.contains("open")) { setMenu(false); menuBtn.focus(); }
+  });
+  window.matchMedia("(min-width: 961px)").addEventListener("change", function (e) { if (e.matches) setMenu(false); });
 })();
 </script>
 
